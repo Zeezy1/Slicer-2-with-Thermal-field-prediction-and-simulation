@@ -68,9 +68,9 @@ namespace ORNL {
 
     QString ArcSegment::writeGCode(QSharedPointer<WriterBase> writer) {
         Velocity speed                = this->getSb()->setting<Velocity>(Constants::SegmentSettings::kSpeed);
-        int extruderSpeed = this->getSb()->setting<int>(Constants::SegmentSettings::kExtruderSpeed);
-        RegionType regionType = this->getSb()->setting<RegionType>(Constants::SegmentSettings::kRegionType);
-        PathModifiers modifiers = this->getSb()->setting<PathModifiers>(Constants::SegmentSettings::kPathModifiers);
+        int extruderSpeed             = this->getSb()->setting<int>(Constants::SegmentSettings::kExtruderSpeed);
+        RegionType regionType         = this->getSb()->setting<RegionType>(Constants::SegmentSettings::kRegionType);
+        PathModifiers modifiers       = this->getSb()->setting<PathModifiers>(Constants::SegmentSettings::kPathModifiers);
         return writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
     }
 

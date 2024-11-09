@@ -198,7 +198,7 @@ namespace ORNL
             });
             loader->start();
         }
-
+//同步和异步的区别其实也就是同步用了for循环，遍历加载，而异步是如果有newmesh信号，则自动加载新的网格数据
         if(saveLocation)
             setMostRecentModelLocation(file_info.absoluteFilePath());
 
@@ -777,6 +777,9 @@ namespace ORNL
         }
 
         // Reconnect the signal to the AST.
+
+        //QObject::connect()：连接两个对象之间的信号和槽。这种连接是基于对象的，能够使得一个对象发送信号，其他对象接收并处理该信号。它允许对象间的通信，不依赖于函数指针，而是依靠信号和槽的定义及其签名。
+        // 普通 connect()：传统的 connect() 方法（如函数指针或标准库中的 std::function）一般用于直接连接回调函数或处理特定事件，它们不依赖对象的信号机制。这种连接不具备 Qt 信号和槽的自动管理和分发功能。
         QObject::connect(this, &SessionManager::startSlice, m_ast.get(), &AbstractSlicingThread::doSlice);
         connect(m_ast.get(), &AbstractSlicingThread::statusUpdate, this, &SessionManager::forwardDialogUpdate);
         connect(m_ast.get(), &AbstractSlicingThread::sliceComplete, this, &SessionManager::sliceComplete);

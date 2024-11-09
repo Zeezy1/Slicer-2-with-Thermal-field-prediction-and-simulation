@@ -22,6 +22,7 @@
 #include "slicing/layer_additions.h"
 #include "optimizers/layer_order_optimizer.h"
 #include "step/layer/regions/infill.h"
+#include "optimizers/layer_order_optimizer.h"
 
 namespace ORNL {
 
@@ -539,14 +540,21 @@ namespace ORNL {
         }
     }
 
+
+
+
     void PolymerSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts, const QSharedPointer<SettingsBase>& settings)
     {
         if(anythingDirty())
         {
             // create global layers from all the part layers
             m_global_layers = LayerOrderOptimizer::populateSteps(settings, parts);
+            LayerOrderOptimizer::logGlobalLayers (m_global_layers);
+
         }
     }
+
+
 
     void PolymerSlicer::assignNozzles(const QSharedPointer<SettingsBase> &settings_base)
     {
@@ -1057,6 +1065,7 @@ namespace ORNL {
         normals_file.close();
     }
 
+    //！立方体没用，试过了
     void PolymerSlicer::writeSpiralGCode()
     {
         QTextStream stream(&m_temp_gcode_output_file);

@@ -22,6 +22,8 @@ namespace ORNL {
         QVector<Polyline> cutlines;
 
         //! The space left over after all the max number of cutlines are generated
+        //! 计算填充区域内的水平（x 方向）总空间减去每条线的间距，得到填充线格子之间的剩余空白区域 freeSpace。
+        // freeSpace是为了将填充线居中放置，防止填充线挤在某个边缘。
         Distance freeSpace = (max.toDistance3D().x - min.toDistance3D().x) % lineSpacing;
 
         //! start at the bounding box's minimum x value and go all the way to the bounding box's maximum x value.
@@ -37,6 +39,7 @@ namespace ORNL {
 
             //! Intersect the polygons and the gridlines and store them
             //! \note This calls ClipperLib
+            //! 将生成的填充线和几何区域进行相交操作。只保留填充线与几何边界相交的部分。这个操作调用了第三方库 ClipperLib。
             cutlines += geometry & cutline;
         }
 
@@ -44,6 +47,8 @@ namespace ORNL {
         for(int i = 0; i < cutlines.size(); i++)
         {
             cutlines[i] = cutlines[i].rotate(-rotation);
+            //在生成填充线后，将它们旋转回原始角度（反向旋转），恢复到未旋转的坐标系。
+            //如果是偶数条填充线，会将其路径反转。这是为了使填充线的起点和终点交替变化，优化路径规划，减少3D打印机头在连续打印时的移动距离。
             if(i % 2 == 0)
                 cutlines[i] = cutlines[i].reverse();
         }

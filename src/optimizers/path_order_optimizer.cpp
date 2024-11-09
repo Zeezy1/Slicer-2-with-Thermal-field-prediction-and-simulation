@@ -38,6 +38,7 @@ namespace ORNL
         return m_should_next_path_be_ccw;
     }
 
+    //设置需要评估的路径，并清除旅行段
     void PathOrderOptimizer::setPathsToEvaluate(QVector<Path> paths)
     {
         m_paths = paths;
@@ -53,6 +54,7 @@ namespace ORNL
         m_topo_level = 0;
     }
 
+    //设置填充模式和边界几何形状
     void PathOrderOptimizer::setParameters(InfillPatterns infillPattern, PolygonList border_geometry)
     {
         m_pattern = infillPattern;
@@ -64,6 +66,7 @@ namespace ORNL
 
     }
 
+    //设置下一个路径是否应该为逆时针
     void PathOrderOptimizer::setParameters(bool shouldNextPathBeCCW)
     {
         m_should_next_path_be_ccw = shouldNextPathBeCCW;
@@ -80,6 +83,7 @@ namespace ORNL
         m_point_override_location = pt;
     }
 
+    //根据当前区域类型链接下一个路径，调用不同的链接函数
     Path PathOrderOptimizer::linkNextPath(QVector<Path> paths)
     {
         if(m_paths.size() > 0)
@@ -102,6 +106,7 @@ namespace ORNL
         }
     }
 
+    //链接下一个填充路径，选择适当的填充模式
     Path PathOrderOptimizer::linkNextInfillPath(QVector<Path>& paths)
     {
         Point savedLocation = m_current_location;
@@ -154,6 +159,7 @@ namespace ORNL
         return nextPath;
     }
 
+    //链接下一个填充线段，设置段的参数并处理旅行段
     Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths)
     {
         //! Gather settings for line segment links
@@ -242,6 +248,7 @@ namespace ORNL
         return new_path;
     }
 
+    //链接下一个同心路径（未完全实现
     Path PathOrderOptimizer::linkNextInfillConcentric()
     {
         Path new_path;
@@ -254,6 +261,7 @@ namespace ORNL
         return new_path;
     }
 
+    //链接下一个骨架路径
     Path PathOrderOptimizer::linkNextSkeletonPath()
     {
         Path new_path;
@@ -297,6 +305,7 @@ namespace ORNL
         return new_path;
     }
 
+    //检查路径链接是否与填充几何形状或边界几何形状相交
     bool PathOrderOptimizer::linkIntersects(Point link_start, Point link_end, QVector<Path> infill_geometry, PolygonList border_geometry)
     {
         //! Check for possible intersections with infill geometry
@@ -322,6 +331,7 @@ namespace ORNL
     }
 
 
+    //查找与当前点最近的路径
     QPair<int, bool> PathOrderOptimizer::closestOpenPath(QVector<Path> paths)
     {
         Distance shortest = Distance(std::numeric_limits<float>::max());
@@ -376,6 +386,7 @@ namespace ORNL
         path.prepend(travel_segment);
     }
 
+    //根据不同的优化策略链接到下一个路径
     Path PathOrderOptimizer::linkTo()
     {
         int pathIndex;
@@ -477,6 +488,10 @@ namespace ORNL
         return QRandomGenerator::global()->bounded(m_paths.size());
     }
 
+    //*
+    //顶点层级计算
+    //*
+    //查找路径的内外层级
     int PathOrderOptimizer::findInteriorExterior(bool ExtToInt)
     {
         if(!m_has_computed_heirarchy && m_paths.size() > 0)
@@ -503,6 +518,7 @@ namespace ORNL
         return result;
     }
 
+    //计算路径的拓扑层级
     QSharedPointer<PathOrderOptimizer::TopologicalNode> PathOrderOptimizer::computeTopologicalHeirarchy()
     {
         QVector<QSharedPointer<TopologicalNode>> all_nodes;
@@ -529,6 +545,7 @@ namespace ORNL
         return root;
     }
 
+    //插入拓扑节点，维护层级关系
     void PathOrderOptimizer::insert(QSharedPointer<TopologicalNode> root, QSharedPointer<TopologicalNode> current)
     {
         if(root->m_children.size() == 0)
@@ -561,6 +578,7 @@ namespace ORNL
         }
     }
 
+    //按层级顺序遍历拓扑节点
     void PathOrderOptimizer::levelOrder(QSharedPointer<TopologicalNode> root)
     {
         if (m_topo_order.size() == m_topo_level)

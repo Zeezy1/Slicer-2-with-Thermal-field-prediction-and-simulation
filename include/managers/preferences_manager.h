@@ -14,7 +14,7 @@ namespace ORNL
 {
     /*!
      * \class PreferencesManager
-     * \brief Manager for preferences
+     * \brief Manager for preferences 优先权
      */
 
      #define PM PreferencesManager::getInstance()

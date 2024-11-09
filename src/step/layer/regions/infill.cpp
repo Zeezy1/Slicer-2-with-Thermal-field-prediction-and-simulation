@@ -44,14 +44,17 @@ namespace ORNL {
         // Every settings polygon will become a hole in the base polygon(s)
         for(auto settings_poly : m_settings_polygons)
         {
+            //判断是否相同。如果设置不同，就将该多边形区域加入到 settings_holes_to_fill 中，以便后续处理
             if(!settingsSame(m_sb, settings_poly.getSettings()))
             {
                 settings_holes_to_fill.push_back(settings_poly);
+                //从复制的几何区域中减去当前多边形区域。这是为了确保不会在已经处理过的区域上再次进行填充
                 m_geometry_copy -= settings_poly;
             }
         }
 
         // Fill with base geometry and default settings
+        //调用填充函数，使用默认的几何区域和设置进行填充。
         fillGeometry(m_geometry_copy, m_sb);
 
         // Fill any regions with different settings
@@ -60,6 +63,7 @@ namespace ORNL {
             if(settings_polygon.getSettings()->setting<bool>(Constants::ProfileSettings::Infill::kEnable))
             {
                 PolygonList geometry;
+                //计算当前几何区域与当前设置的多边形的交集，并将其添加到 geometry 变量中
                 geometry += (m_geometry & settings_polygon);
                 QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
                 region_settings->setSetting(Constants::ProfileSettings::Infill::kLineSpacing,
@@ -81,8 +85,11 @@ namespace ORNL {
         //kAngle in the setting has already been updated for each layer
         Angle default_angle = sb->setting<Angle>(Constants::ProfileSettings::Infill::kAngle);
 
+        //将传入的几何形状缩小半个线宽，以便生成的填充图案能够正确对齐。这是为了在填充时避免边缘重叠的问题。
         PolygonList adjustedGeometry = geometry.offset(-default_bead_width / 2);
 
+        //这个布尔变量用于判断是否应该根据打印机的全局尺寸来计算填充区域。
+        //如果为真，代码会从设置中获取打印机的最小（XMin、YMin）和最大（XMax、YMax）的X、Y坐标，从而定义一个打印机的边界框。
         Point min, max;
         bool default_global_printer_area = sb->setting<bool>(Constants::ProfileSettings::Infill::kBasedOnPrinter);
         if(default_global_printer_area)
@@ -93,6 +100,7 @@ namespace ORNL {
         }
 
         if(!sb->setting<bool>(Constants::ProfileSettings::Infill::kManualLineSpacing))
+        //如果没有启用手动设置，代码会根据填充密度（kDensity）来自动计算线间距。
         {
             double density = sb->setting<double>(Constants::ProfileSettings::Infill::kDensity) / 100.0;
             default_line_spacing = default_bead_width / density;
@@ -140,6 +148,8 @@ namespace ORNL {
         }
 
         if(default_infill_pattern == InfillPatterns::kInsideOutConcentric)
+            //如果当前的填充模式是“从内到外的同心圆”（InsideOutConcentric），调用 reversePaths 函数来反转路径顺序。
+            //这是为了符合该填充模式的特点，即从内部开始向外扩展。
             this->reversePaths();
     }
 

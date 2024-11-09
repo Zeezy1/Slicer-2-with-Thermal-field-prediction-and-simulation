@@ -1,4 +1,4 @@
-#include <algorithms/algorithm_base.h>
+    #include <algorithms/algorithm_base.h>
 
 //Local
 #include "managers/gpu_manager.h"

@@ -19,7 +19,8 @@
 
 namespace ORNL
 {
-    MeshLoader::MeshLoader(QString file_path, MeshType mt, QMatrix4x4 transform, Distance unit) : m_file_path(file_path), m_mesh_type(mt), m_transform(transform), m_unit(unit)
+    MeshLoader::MeshLoader(QString file_path, MeshType mt, QMatrix4x4 transform, Distance unit) :
+    m_file_path(file_path), m_mesh_type(mt), m_transform(transform), m_unit(unit)
     {
     }
 
@@ -50,9 +51,9 @@ namespace ORNL
             file_data = LoadRawData(file_info.absoluteFilePath());
         }
         else
-            file_data = std::make_pair(raw_data, file_size);
+            file_data = std::make_pair(raw_data, file_size);//返回的是键值对 (data,size)
 
-        const aiScene* scene = nullptr;
+        const aiScene* scene = nullptr;//all imported data,everything can be accessed from here
 
         Assimp::Importer importer;
 
@@ -60,10 +61,10 @@ namespace ORNL
 
         if(model_type == "stl" || model_type == "STL")
         {
-            scene = importer.ReadFileFromMemory(file_data.first, file_data.second,
-                    aiProcess_DropNormals |
-                    aiProcess_JoinIdenticalVertices |
-                    aiProcess_SortByPType,
+            scene = importer.ReadFileFromMemory(file_data.first, file_data.second,//缓冲区和size 对应的键值对
+                    aiProcess_DropNormals |//法线是 3D 模型的每个顶点或面片的方向信息，常用于光照计算。如果模型本身不需要法线（比如只需要几何结构），可以选择丢弃它们，减少模型大小和内存消耗。
+                    aiProcess_JoinIdenticalVertices |//3D 模型有时可能包含重复的顶点（即不同的面片引用同样的坐标，但这些顶点在数据结构中是独立的）。这个处理步骤会合并这些顶点，减少内存占用，并提高渲染效率。
+                    aiProcess_SortByPType,//3D 模型可能包含不同类型的几何图元，比如点、线、三角形、多边形等。aiProcess_SortByPType 将不同类型的图元分离成不同的部分，便于后续的处理或渲染。
                     "stl"); // Tell assimp we are using STL.
         }else if(model_type == "3mf" || model_type == "3MF")
         {
@@ -77,7 +78,7 @@ namespace ORNL
             scene = importer.ReadFileFromMemory(file_data.first, file_data.second,
                     aiProcess_DropNormals |
                     aiProcess_JoinIdenticalVertices |
-                    aiProcess_Triangulate |
+                    aiProcess_Triangulate |//将所有的多边形转化为三角形，方便大部分渲染引擎处理。
                     aiProcess_SortByPType,
                     "obj"); // Tell assimp we are using obj.
         }else if(model_type == "amf" || model_type == "AMF")
@@ -101,6 +102,7 @@ namespace ORNL
 
         if(scene->HasMeshes())
         {
+            // extracts meshes that have both faces and vertices
             int num_models_added = 0;
             for(int i = 0, end = scene->mNumMeshes; i < end; ++i)
             {
@@ -153,7 +155,7 @@ namespace ORNL
                     // Apply transform
                     new_mesh->setTransformation(transform);
 
-                    loaded_meshes.push_back({ new_mesh, file_data.first, file_data.second });
+                    loaded_meshes.push_back({ new_mesh, file_data.first, file_data.second });//The final mesh is stored in loaded_meshes along with the raw data and size
 
                     ++num_models_added;
                 }
@@ -168,17 +170,19 @@ namespace ORNL
 
         // Load raw data
         // Some C here to get a void pointer of the model.
+        //fopen:这是一个标准的 C 函数，用于以 "二进制读" 模式（"rb"）打开文件。file_path.toUtf8() 将 QString 转换为 C 风格的 UTF-8 字符串。
+        //fptr：这是一个指向文件的指针，如果 fopen 成功打开文件，fptr 将指向该文件，否则它会返回 nullptr。
         FILE* fptr = fopen(file_path.toUtf8(), "rb");
 
-        fseek(fptr, 0L, SEEK_END);
+        fseek(fptr, 0L, SEEK_END);//将文件指针移动到文件末尾，以便测量文件大小
         size_t fsize = ftell(fptr);
-        fseek(fptr, 0L, SEEK_SET);
+        fseek(fptr, 0L, SEEK_SET);//将文件指针重新设置到文件的起始位置，准备读取文件内容。
 
-        void* data = malloc(fsize);
+        void* data = malloc(fsize);//memory allocation 分配内存
         if (data == nullptr)
             return std::make_pair(nullptr, 0);
 
-        int readres = fread(data, 1, fsize, fptr);
+        int readres = fread(data, 1, fsize, fptr);//从文件读取数据，读取到 data 中 ; 故初始data指向该内存块地址，是随机的内容，现在该内存块通过fread存储了文件的内容
 
         if (readres != fsize)
             return std::make_pair(nullptr, 0);

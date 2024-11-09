@@ -6,6 +6,7 @@
 #include "exceptions/exceptions.h"
 #include "utilities/qt_json_conversion.h"
 
+//目前的理解是参数的默认值是否改变，比如如果输入设定了参数如速度、加速度 velocity、acceletaion,则将其改变，方法是在JSON中搜索键值对，如果搜不到则返回默认值
 namespace ORNL
 {
     QSharedPointer< PreferencesManager > PreferencesManager::m_singleton =

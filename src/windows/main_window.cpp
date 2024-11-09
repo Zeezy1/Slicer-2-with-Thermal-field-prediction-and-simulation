@@ -314,6 +314,11 @@ namespace ORNL {
         m_cmddock = new QDockWidget(this);
         m_cmddock->setObjectName(QStringLiteral("m_cmddock"));
 
+        // PrinterControlDock
+        m_printercontroldock = new QDockWidget(this);
+        m_printercontroldock->setObjectName(QStringLiteral("m_printercontroldock"));
+        m_printercontroldock->setMinimumWidth(Constants::UI::MainWindow::SideDock::kPrinterControlWidth);
+
         // Set the Sidebar to have precedence over the commandbar.
         this->setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
         // Set the Sidebar to have precedence over the main control
@@ -389,6 +394,9 @@ namespace ORNL {
 
         // Status bar.
         m_statusbar = new QStatusBar(this);
+
+        //PrinterControl bar.
+        m_printercontrolbar = new PrinterControlWidget();
     }
 
     void MainWindow::setupActions() {
@@ -428,6 +436,7 @@ namespace ORNL {
         // Menu View
         m_actions["part_view"]      = {"Part View",                     ":/icons/cube_black.png",           false,  QKeySequence(),                     nullptr};
         m_actions["gcode_view"]     = {"G-Code View",                   ":/icons/3d_black.png",             false,  QKeySequence(),                     nullptr};
+
         m_actions["reset_camera"]   = {"Reset Camera",                  ":/icons/camera_reset_black.png",   false,  QKeySequence(),                     nullptr};
 
         // Menu Settings
@@ -617,6 +626,9 @@ namespace ORNL {
         m_auto_orient_dock->setWidget(m_auto_orient_widget);
         m_layer_template_dock->setWidget(m_layer_template_widget);
         m_statusbar->addPermanentWidget(m_progressbar);
+        //************
+        m_printercontroldock->setWidget(m_printercontrolbar);
+        //************
 
         m_tab_widget->addTab(m_part_widget, "Object View");
         m_tab_widget->addTab(m_gcode_widget, "GCode View");
@@ -629,6 +641,8 @@ namespace ORNL {
         this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_external_file_dock);
         this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_auto_orient_dock);
         this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_layer_template_dock);
+
+        this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_printercontroldock);
 
         m_cmddock->setMaximumHeight(Constants::UI::MainWindow::kStatusBarMaxHeight);
 
@@ -704,6 +718,7 @@ namespace ORNL {
         connect(m_actions["show_all_experimental"].action, &QAction::triggered, this,
                 [this]() { this->showAllSettings("Experimental", m_menu_hidden_experimental_settings); });
 
+        //即便 MainToolbar 不是 MainWindow 的子对象，只要 MainWindow 持有了它的指针（m_main_toolbar），它就能通过该指针调用 MainToolbar 的方法。
         connect(m_actions["gcode_view"].action, &QAction::triggered, this, [this](){switchViews(1); m_main_toolbar->setView(1);});
         connect(m_actions["part_view"].action, &QAction::triggered, this, [this](){switchViews(0); m_main_toolbar->setView(0);});
         connect(m_actions["reset_camera"].action, &QAction::triggered, m_part_widget, &PartWidget::resetCamera);
@@ -750,6 +765,7 @@ namespace ORNL {
         //connect(m_part_widget->m_slice_btn, &QToolButton::clicked, this, &MainWindow::doSlice);
 
         // Session connections.
+        //重要重要 session状态改变
         connect(CSM.get(), &SessionManager::partAdded, m_part_widget, &PartWidget::add);
         connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainWindow::importFile);
         connect(CSM.get(), &SessionManager::forwardSliceComplete, this, &MainWindow::enableExportMenu);
@@ -880,6 +896,8 @@ namespace ORNL {
 
         connect(CSM.get(), &SessionManager::requestTransformationUpdate, m_part_widget, &PartWidget::updatePartTransformations);
 
+
+
         // Init to part view
         switchViews(0);
 
@@ -896,7 +914,7 @@ namespace ORNL {
     void MainWindow::switchViews(int index)
     {
         m_tab_widget->setCurrentIndex(index);
-        if(index)
+        if(index == 1)
         {
             connect(m_gcode_widget, &GCodeWidget::resized, m_main_toolbar, &MainToolbar::resize);
             connect(m_actions["reset_camera"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::resetCamera);
@@ -910,7 +928,7 @@ namespace ORNL {
             QObject::disconnect(m_actions["zoom_out"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomOut);
             QObject::disconnect(m_actions["zoom_reset"].action, &QAction::triggered, m_part_widget, &PartWidget::resetZoom);
         }
-        else
+        else if(index == 0)
         {
             connect(m_part_widget, &PartWidget::resized, m_main_toolbar, &MainToolbar::resize);
             connect(m_actions["reset_camera"].action, &QAction::triggered, m_part_widget, &PartWidget::resetCamera);
@@ -924,6 +942,21 @@ namespace ORNL {
             QObject::disconnect(m_actions["zoom_out"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::zoomOut);
             QObject::disconnect(m_actions["zoom_reset"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::resetZoom);
         }
+        // else if (index == 2)
+        // {
+        //     // QObject::disconnect(m_part_widget, &PartWidget::resized, m_main_toolbar, &MainToolbar::resize);
+        //     // QObject::disconnect(m_actions["reset_camera"].action, &QAction::triggered, m_part_widget, &PartWidget::resetCamera);
+        //     // QObject::disconnect(m_actions["zoom_in"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomIn);
+        //     // QObject::disconnect(m_actions["zoom_out"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomOut);
+        //     // QObject::disconnect(m_actions["zoom_reset"].action, &QAction::triggered, m_part_widget, &PartWidget::resetZoom);
+
+        //     // QObject::disconnect(m_gcode_widget, &GCodeWidget::resized, m_main_toolbar, &MainToolbar::resize);
+        //     // QObject::disconnect(m_actions["reset_camera"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::resetCamera);
+        //     // QObject::disconnect(m_actions["zoom_in"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::zoomIn);
+        //     // QObject::disconnect(m_actions["zoom_out"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::zoomOut);
+        //     // QObject::disconnect(m_actions["zoom_reset"].action, &QAction::triggered, m_gcode_widget, &GCodeWidget::resetZoom);
+
+        // }
     }
 
     void MainWindow::handleModifiedSetting(const QString key)
@@ -1028,6 +1061,8 @@ namespace ORNL {
         m_auto_orient_dock->setWindowTitle(QApplication::translate("MainWindow", "Auto Orientation", nullptr));
         m_layer_template_dock->setWindowTitle(QApplication::translate("MainWindow", "Layer Template", nullptr));
         m_cmddock->setWindowTitle(QApplication::translate("MainWindow", "Status", nullptr));
+        m_printercontroldock->setWindowTitle(QApplication::translate("MainWindow", "PrinterController", nullptr));
+
     }
 
     void MainWindow::setBusy(bool busy, QString msg) {
@@ -1080,7 +1115,7 @@ namespace ORNL {
         m_layertimebar->clear();
 
         if(!CSM->isBuildMode())
-            return;
+            return;  //网格不是buildmode 不切片？
 
         m_slice_dialog.reset(new SliceDialog(this));
         connect(CSM.get(), &SessionManager::updateDialog, m_slice_dialog.get(), QOverload<StatusUpdateStepType, int>::of(&SliceDialog::updateStatus));

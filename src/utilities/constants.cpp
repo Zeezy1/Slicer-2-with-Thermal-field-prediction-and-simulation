@@ -1046,6 +1046,7 @@ namespace ORNL
     const int Constants::UI::MainWindow::SideDock::kGCodeWidth = 500;
     const int Constants::UI::MainWindow::SideDock::kLayerTimesWidth = 500;
     const int Constants::UI::MainWindow::SideDock::kExternalFileWidth = 500;
+    const int Constants::UI::MainWindow::SideDock::kPrinterControlWidth = 800;
 
     // MainWindow: Margins
     const int Constants::UI::MainWindow::Margins::kMainLayoutSpacing = 6;

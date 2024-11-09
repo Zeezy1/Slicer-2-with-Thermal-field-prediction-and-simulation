@@ -82,7 +82,7 @@ namespace ORNL {
         float delta_x = ndc_pos.x() - m_drag_start.x();
         float delta_y = ndc_pos.y() - m_drag_start.y();
 
-        float translation_speed = 20 * (m_zoom / m_default_zoom);
+        float translation_speed = 1 * (m_zoom / m_default_zoom);  //原来是20 *
 
         this->setDragStart(ndc_pos);
         QVector3D translation = (-translation_speed * delta_x * right) - (translation_speed * delta_y * up);

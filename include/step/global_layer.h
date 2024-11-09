@@ -22,6 +22,8 @@ namespace ORNL
             //! \param layer_number - the # in sequence the global layer should be printed
             GlobalLayer(int layer_number);
 
+            const QMap< QUuid, QSharedPointer<Part::StepPair>>& getStepPairs() const { return m_step_pairs; }
+
             //! \brief compensates for rotation and shift during cross-sectioning
             //! \note  only affects clean objects; should be called before connectPaths
             void unorient();

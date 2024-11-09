@@ -96,6 +96,8 @@ namespace ORNL {
     }
 
     void GCodeWidget::setupSubWidgets() {
+
+        //m_segment_info_control（显示 GCode 段信息的控件）、m_gcode_view（用于显示 GCode 的 OpenGL 视图）
         //Segment info Control
         m_segment_info_control = QSharedPointer<GCodeInfoControl>(new GCodeInfoControl(this));
 
@@ -109,6 +111,7 @@ namespace ORNL {
 
         // OpenGL View
         m_gcode_view = new GCodeView(GSM->getGlobal(), m_segment_info_control);
+        //设置了 m_gcode_view 的尺寸，使其与父 widget（GCodeWidget）一致
         m_gcode_view->resize(this->width(), this->height());
         m_gcode_view->setFormat(format);
         SegmentDisplayType types = SegmentDisplayType::kNone;
@@ -128,6 +131,7 @@ namespace ORNL {
     }
 
     void GCodeWidget::setupLayouts() {
+        //设置了一个垂直布局（QVBoxLayout），并将 m_gcode_view 添加到当前的布局中。通过这个布局，m_gcode_view 将被包含在 GCodeWidget 中，并且可以正确显示。
         m_layout = new QVBoxLayout(this);
         m_layout->addWidget(m_gcode_view);
     }

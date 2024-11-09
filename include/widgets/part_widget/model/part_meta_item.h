@@ -130,7 +130,7 @@ namespace ORNL {
             //! \brief Gets the graphisc for this item.
             QSharedPointer<PartObject> graphicsPart();
 
-            //! \brief Get the part pointer.
+            // ! \brief Get the part pointer.
             QSharedPointer<Part> part();
 
         signals:

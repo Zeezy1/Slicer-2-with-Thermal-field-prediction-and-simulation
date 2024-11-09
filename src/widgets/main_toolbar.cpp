@@ -125,11 +125,13 @@ namespace ORNL
         m_slice_btn->setEnabled(false);
         m_slice_btn->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
         connect(m_slice_btn, &QToolButton::clicked, this, [this](){emit slice();});
+        //信号发出
         this->addWidget(m_slice_btn);
     }
 
     QTabBar *MainToolbar::buildTabs()
     {
+        //创建一个新的 QTabBar 实例，并将 this（即当前的 MainToolbar 对象）作为其父对象
         auto* tabs = new QTabBar(this);
         tabs->setMinimumWidth(220);
         tabs->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -138,6 +140,11 @@ namespace ORNL
         tabs->addTab("Part View");
         tabs->addTab("G-Code View");
 
+
+        //[this](int index)：一个 Lambda 函数，当信号发出时执行。它接收一个整数参数 index，表示当前选中的标签索引。
+        //enableCorrectOptions()：调用此方法，以便根据当前选择的标签更新界面选项或功能（具体实现取决于 enableCorrectOptions 的定义）。
+        //emit viewChanged(index)：发出一个名为 viewChanged 的信号，传递当前标签的索引 index。这可以用于其他部分的代码以响应标签切换。
+        //this->raise()：将当前窗口提升到最前面，使其在视觉上处于其他窗口之上。
         connect(tabs, &QTabBar::currentChanged,  this, [this](int index){
             enableCorrectOptions();
             emit viewChanged(index);
@@ -323,14 +330,18 @@ namespace ORNL
 
     void MainToolbar::enableCorrectOptions()
     {
+        //若currentIndex() 返回非零值，表示当前选中的不是第一个标签（“Part View” 标签）。
         if(m_tabs->currentIndex())
         {
+            // 禁用与 3D 模型编辑相关的按钮
             m_add_btn->setEnabled(false);
             m_shape_btn->setEnabled(false);
             m_slicing_planes_btn->setEnabled(false);
             m_overhang_button->setEnabled(false);
             m_billboarding_button->setEnabled(false);
             m_seam_btn->setEnabled(false);
+
+            // 启用与 G-Code 查看和导出相关的按钮
             m_segment_info_button->setEnabled(true);
             m_2d_gcode_btn->setEnabled(true);
             m_show_ghosts_btn->setEnabled(true);
@@ -346,6 +357,8 @@ namespace ORNL
             m_2d_gcode_btn->setEnabled(false);
             m_show_ghosts_btn->setEnabled(false);
             m_export_gcode_btn->setEnabled(false);
+
+            // 处理与 `seam_btn` 相关的设置变化
             handleModifiedSetting(""); // Checks and sets seam button
         }
     }
@@ -410,10 +423,11 @@ namespace ORNL
         this->raise();
     }
 
+    //从主题文件夹中读取名为 main_toolbar.qss 的样式文件内容，并将其应用到 MainToolbar 对象上，以改变工具栏的外观。它使用了智能指针 QSharedPointer 来管理文件对象，确保在不再需要时自动释放内存。
     void MainToolbar::setupStyle()
     {
         QSharedPointer<QFile> style = QSharedPointer<QFile>(new QFile(PreferencesManager::getInstance()->getTheme().getFolderPath() + "main_toolbar.qss"));
-        style->open(QIODevice::ReadOnly);
+        style->open(QIODevice::ReadOnly);//只读打开文件，读取.qss的样式设置，因此想看toolbar的样式设置要去这里找
         this->setStyleSheet(style->readAll());
         style->close();
     }

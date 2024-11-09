@@ -250,6 +250,7 @@ namespace ORNL {
             void startSlice();
 
             //! \brief Signal that slicing has complete.  Forward to main window to start visualization and adjust layer times.
+            //! 很重要 这里多看看
             void forwardSliceComplete(QString filepath, bool alterFile);
 
             //! \brief Signal that slicing thread has started writing the GCode file.
@@ -275,6 +276,7 @@ namespace ORNL {
 
             //! \brief Model data.
             //! \note This maps filename to malloc'ed data. This is because both mesh loader (assimp) and zip library (zip) expect a void ptr.
+            //! 为了兼容一些外部库，比如 assimp（一个常见的模型加载器）和 zip（用于处理压缩文件的库），这些库期望使用 void* 指针类型来处理数据。
             QMap<QString, model_data> m_models;
 
             //! \brief Current session file.

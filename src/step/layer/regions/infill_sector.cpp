@@ -32,7 +32,7 @@ namespace ORNL {
 
     void InfillSector::compute(uint layer_num, QSharedPointer<SyncManager>& sync){
         m_paths.clear();
-
+        //从设置管理器 m_sb 获取打印机的偏移量，填充模式、线间距、涂层宽度、填充角度等参数。这些参数是计算填充路径的基础
         Point center(m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kXOffset), m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kYOffset));
         InfillPatterns infillPattern = static_cast<InfillPatterns>(m_sb->setting<int>(Constants::ProfileSettings::Infill::kPattern));
         Distance lineSpacing = m_sb->setting<Distance>(Constants::ProfileSettings::Infill::kLineSpacing);
@@ -41,6 +41,8 @@ namespace ORNL {
         //kAngle in the setting has already been updated for each layer
         Angle infillAngle = m_sb->setting<Angle>(Constants::ProfileSettings::Infill::kAngle);
         Point min, max;
+
+        //根据设置判断是否基于打印机的工作区域。如果是，则获取打印区域的最小和最大坐标
         bool globalPrinterArea = m_sb->setting<bool>(Constants::ProfileSettings::Infill::kBasedOnPrinter);
         if(globalPrinterArea)
         {
@@ -49,11 +51,14 @@ namespace ORNL {
             max = Point(m_sb->setting<Distance>(Constants::PrinterSettings::Dimensions::kXMax), m_sb->setting<Distance>(Constants::PrinterSettings::Dimensions::kYMax));
         }
 
+        //通过设定的重叠值调整几何形状，以避免填充区域之间的空隙或重叠
         PolygonList geometry_copy = m_geometry;
         //Adjust for overlap
         Distance default_overlap = m_sb->setting<Distance>(Constants::ProfileSettings::Infill::kOverlap);
         geometry_copy = m_geometry.offset(default_overlap);
 
+
+        //根据选择的填充模式调用相应的填充路径生成器生成几何形状。每种填充模式都有不同的生成算法。
         switch(infillPattern)
         {
             case InfillPatterns::kLines:
@@ -79,6 +84,7 @@ namespace ORNL {
            break;
         }
 
+        //在生成的路径中，对路径进行角度调整。如果路径的结束角度小于开始角度，路径将被反向。这是为了确保路径的顺序一致。
         QVector<QPair<Distance, Polyline>> circularOrder;
         for(Polyline& line : m_computed_geometry)
         {
@@ -89,6 +95,7 @@ namespace ORNL {
                 line = line.reverse();
         }
 
+        //将每条路径与其中心点的距离存储在一个向量中，方便后续的排序。
         for(Polyline line : m_computed_geometry)
         {
             QPair<Distance, Polyline> pair;
@@ -109,10 +116,13 @@ namespace ORNL {
 //                return a.first > b.first;
 //        });
 
+
+        //反转计算的路径顺序并统一路径样式。这一部分的具体实现细节可能涉及到路径的规范化，以确保它们符合打印机的要求。
         std::reverse(m_computed_geometry.begin(), m_computed_geometry.end());
 
         uniform(m_computed_geometry);
 
+        //遍历所有计算出的路径并创建最终的路径数据，存储到 m_paths 中
         for(Polyline line : m_computed_geometry)
             m_paths.push_back(createPath(line));
     }

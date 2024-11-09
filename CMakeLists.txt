@@ -12,11 +12,25 @@ string(TIMESTAMP APP_COMPILE_TIME "%m-%d-%Y")
 add_definitions(-DAPP_COMPILE_TIME="${APP_COMPILE_TIME}")
 message(STATUS "App compile date set to: ${APP_COMPILE_TIME}")
 
+set(GUGAOINC_DIR "./gugao")
+set(GUGAOLINK_DIR "./gugao")
+include_directories(${GUGAOINC_DIR})
+link_directories(${GUGAOLINK_DIR})
+#target_link_libraries(ornl_slicer_2 gts.lib)
+
+
 # Find  Qt Packages
 find_package(Qt5 REQUIRED COMPONENTS
   Core Gui Widgets Concurrent OpenGL Network Charts
 )
 message(STATUS "Qt Libraries Found")
+
+set(GUGAOINC_DIR "./gugao")
+set(GUGAOLINK_DIR "./gugao")
+include_directories(${GUGAOINC_DIR})
+link_directories(${GUGAOLINK_DIR})
+#target_link_libraries(ornl_slicer_2 gts.lib)
+
 
 # Add Qt libs to the running list
 list(APPEND libs Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Core Qt5::Concurrent Qt5::Network Qt5::Charts)

@@ -3,6 +3,7 @@
 
 namespace ORNL
 {
+    //优化图层的顺序，以便在 3D 打印过程中有效地处理不同的部分（Part）和步骤（Step）。
     QSharedPointer<GlobalLayer> LayerOrderOptimizer::populateStep(QVector<QSharedPointer<Part>> build_parts)
     {
         //! \note called by real-time slicers only
@@ -20,6 +21,7 @@ namespace ORNL
         return new_g_layer;
     }
 
+    //根据全局设置中的图层排序方法（LayerOrdering）来填充全局图层的列表
     QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPointer<SettingsBase> global_sb, QVector<QSharedPointer<Part>> build_parts)
     {
         // list to return at end of function
@@ -29,14 +31,23 @@ namespace ORNL
         // after global layers have been assigned, assign nozzles/tools (if necessary)
         LayerOrdering order_method = global_sb->setting<LayerOrdering>(Constants::ExperimentalSettings::PrinterConfig::kLayerOrdering);
 
+
+        //! 假设所有部分的切片平面角度相同，计算每个部分的当前步骤，并找到“最低”的图层，然后将具有相同平面的图层组合到同一个全局图层中
+        //! 获取切片平面的法向量和切片角度，然后计算每个部分的当前层与该层的距离。
+        //! 使用一个映射来跟踪每个部分的当前图层。
+        //! 通过循环检查每个部分的图层，找到距离最近的图层，并将其加入到全局图层中，直到所有部分的图层都被处理完。
+
         if (order_method == LayerOrdering::kByHeight)
         {
             //! \note Layer ordering by height assumes that all parts were sliced with same plane angle, and that the plane does not rotate
+            //! 假设所有部分的切片平面角度相同，计算每个部分的当前步骤，并找到“最低”的图层，然后将具有相同平面的图层组合到同一个全局图层中。
             // fetch the slicing plane normal from global settings
             QVector3D slicing_plane =  QVector3D(0, 0, 1);
+            //! 俯仰、偏航和滚动
             Angle slicing_plane_pitch = global_sb->setting<Angle>(Constants::ExperimentalSettings::SlicingAngle::kStackingDirectionPitch);
             Angle slicing_plane_yaw   = global_sb->setting<Angle>(Constants::ExperimentalSettings::SlicingAngle::kStackingDirectionYaw);
             Angle slicing_plane_roll  = global_sb->setting<Angle>(Constants::ExperimentalSettings::SlicingAngle::kStackingDirectionRoll);
+            //! 使用一个四元数（QQuaternion）将初始法向量旋转到指定角度，以便获得最终的切片法向量（slicing_plane）
             QQuaternion quaternion = MathUtils::CreateQuaternion(slicing_plane_pitch, slicing_plane_yaw, slicing_plane_roll);
             slicing_plane = quaternion.rotatedVector(slicing_plane);
 
@@ -58,6 +69,7 @@ namespace ORNL
                 Distance min_dist;
 
                 // Check all the parts for the next "lowest" layer to print
+                //! 内层循环遍历所有的部分，为每个部分找到一个“当前最低”图层
                 for (auto& part : build_parts)
                 {
                     QUuid part_id = part->getId();
@@ -74,6 +86,7 @@ namespace ORNL
                     Distance layer_height = current_step->getSb()->setting<Distance>(Constants::ProfileSettings::Layer::kLayerHeight);
                     layer_plane.shiftAlongNormal(layer_height() / 2.0);
 
+                    //! 表示切片平面与原点的距离
                     Distance layer_dist = MathUtils::linePlaneIntersection(Point(0,0,0), slicing_plane, layer_plane).distance();
 
                     // If this is the first plane in this loop, or its lower than the current min, set this layer as the min
@@ -100,6 +113,7 @@ namespace ORNL
                     QSharedPointer<Step> current_step =  part->getStepPair(current_layer[part_id]).printing_layer;
 
                     Distance layer_height = current_step->getSb()->setting<Distance>(Constants::ProfileSettings::Layer::kLayerHeight);
+                    //! 用于允许在一定范围内的图层合并，避免因微小差异而创建额外的全局图层。
                     Distance layer_grouping_tolerance = global_sb->setting<Distance>(Constants::ExperimentalSettings::PrinterConfig::kLayerGroupingTolerance);
                     Plane layer_plane = current_step->getSlicingPlane();
                     layer_plane.shiftAlongNormal(layer_height() / 2.0);
@@ -113,11 +127,13 @@ namespace ORNL
                 }
 
                 // add the new global layer to the list
+                //!global_layers 重点关注
                 global_layers.push_back(new_global_layer);
                 ++num_global_steps;
 
                 // update steps_left
                 steps_left = false;
+                //! 如果所有部分的当前图层索引都已经达到了总图层数（countStepPairs）(下面的 或 判断逻辑)
                 for (auto& part : build_parts)
                     steps_left = steps_left || (current_layer[part->getId()] < part->countStepPairs());
 
@@ -196,6 +212,49 @@ namespace ORNL
         return global_layers;
     }
 
+
+    void LayerOrderOptimizer::logGlobalLayers(const QList<QSharedPointer<GlobalLayer>>& global_layers)
+    {
+    QFile logFile("global_layers_log.txt"); // 指定日志文件路径
+    if (logFile.open(QIODevice::Append | QIODevice::Text)) // 追加模式
+    {
+        QTextStream logStream(&logFile);
+
+        logStream << "Logging global_layers content:\n";
+        for (int i = 0; i < global_layers.size(); ++i)
+        {
+            logStream << "Global Layer " << i << ":\n";
+            const auto& layer = global_layers[i];
+
+            //! // 使用 getStepPairs 获取 step pairs，并迭代输出内容
+            const auto& step_pairs = layer->getStepPairs();
+            for (auto it = step_pairs.constBegin(); it != step_pairs.constEnd(); ++it)
+            {
+                QUuid part_id = it.key();
+                const QSharedPointer<Part::StepPair> &step_pair_ptr = it.value();
+
+                // 确保 step_pair_ptr 非空
+                if (step_pair_ptr)
+                {
+                logStream << "  Part ID: " << part_id.toString() << "\n";
+/*                    if (step_pair_ptr->printing_layer)
+                        logStream << "  Printing Layer: " << step_pair_ptr->printing_layer << "\n"; */ // 示例输出
+
+                }
+                else
+                {
+                    logStream << "  StepPair is null for Part ID: " << part_id.toString() << "\n";
+                }
+
+            }
+
+                // 添加更多信息，如层高度、层位置等
+
+        }
+        logStream << "End of global_layers log\n\n";
+    }
+    logFile.close();
+    }
 
     //! \note this function is unused and not updated in refactor. Should probably be moved to exist on the global layer
    /*

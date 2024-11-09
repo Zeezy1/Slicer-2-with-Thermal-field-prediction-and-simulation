@@ -21,7 +21,7 @@
 // Local
 #include "widgets/settings/setting_pane.h"
 
-namespace ORNL {
+namespace ORNL {    
     class SettingTab;
 
     /*!

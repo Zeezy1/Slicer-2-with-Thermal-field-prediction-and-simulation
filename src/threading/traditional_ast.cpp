@@ -19,7 +19,7 @@ namespace ORNL {
         }
 
         m_timer.start();
-
+        //清空线程池、步骤队列
         m_step_threads.clear();
         m_step_queue.clear();
 
@@ -40,6 +40,7 @@ namespace ORNL {
         }
 
         // Instantiate the ideal thread amount.
+        // QThread::idealThreadCount() 返回当前系统的最佳线程数
         for (int i = 0, end = (total_steps > QThread::idealThreadCount() ? QThread::idealThreadCount() : total_steps); i < end; ++i)
         {
             StepThread* st = new StepThread();
@@ -69,6 +70,7 @@ namespace ORNL {
         m_queue_start_size = m_step_queue.size();
 
         // For every thread available, give it a step to compute.
+        // 将待处理的步骤分发到已初始化的线程中，让这些线程开始工作
         for (StepThread* st : m_step_threads) {
             if (m_step_queue.empty()) break;
 
@@ -106,6 +108,7 @@ namespace ORNL {
             emit stepStart();
 
         // After starting steps, ensure that all threads are disconnected. Otherwise, the compute function will be recalled in cleanThread().
+        //确保线程不会在之后意外接收到重复的 stepStart 信号，避免不必要的任务执行。
         QObject::disconnect(this, &TraditionalAST::stepStart, nullptr, nullptr);
     }
 

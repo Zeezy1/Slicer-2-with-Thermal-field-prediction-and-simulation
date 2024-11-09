@@ -1,4 +1,4 @@
-#ifndef MAIN_CONTROL_H
+#ifndef MAIN_CONTROL_H  // 防止头文件多次包含的方式，它使用预处理指令确保头文件中的内容不会在同一个编译过程中被多次包含
 #define MAIN_CONTROL_H
 
 // Qt Libraries

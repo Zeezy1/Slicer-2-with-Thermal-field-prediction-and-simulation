@@ -1255,6 +1255,7 @@ namespace ORNL
                      static const int kGCodeWidth;
                      static const int kLayerTimesWidth;
                      static const int kExternalFileWidth;
+                     static const int kPrinterControlWidth;
                  };
 
                  class Margins

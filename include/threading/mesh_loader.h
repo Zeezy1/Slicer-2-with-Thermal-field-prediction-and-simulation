@@ -5,6 +5,19 @@
 #include <QFileInfo>
 #include <QThread>
 
+//在 Qt 中，QThread 用来创建和管理线程。默认情况下，所有的 Qt 应用程序都在一个单线程中运行，即所谓的主线程或 GUI 线程。
+//通过使用 QThread，可以将一些耗时的操作放在后台线程中执行，以确保主线程（特别是 GUI 线程）保持响应状态，不被阻塞。
+
+// 线程安全
+// 多线程编程中的一个重要问题是线程安全。不同线程访问相同数据时，必须通过加锁等机制防止数据竞争。Qt 提供了多种锁机制，如 QMutex、QSemaphore、QWaitCondition 等。
+
+//GUI 线程与后台线程的区别
+//Qt 要求所有的 GUI 相关操作必须在主线程中执行，因此不能在后台线程中直接操作 UI 控件。可以通过信号和槽机制，将需要更新 UI 的信号发送到主线程中处理。
+
+//线程的生命周期管理
+//创建线程时要注意线程的生命周期管理，避免资源泄露或异常退出时没有正确结束线程。
+
+
 // Local
 #include <utilities/enums.h>
 #include "geometry/mesh/closed_mesh.h"
@@ -85,7 +98,7 @@ namespace ORNL
                     //! \brief Builds a polyhedron incrementally using faces
                     //! \param vertices: the mesh's vertices
                     //! \param faces: the mesh's faces
-                    MeshBuilderAssimp(aiMesh* mesh) : m_mesh(mesh) {};
+                    MeshBuilderAssimp(aiMesh* mesh) : m_mesh(mesh) {};//使用初始化列表 : m_mesh(mesh) 把传入的参数 mesh 赋值给成员变量 m_mesh
 
                     void operator()(HDS& hds)
                     {

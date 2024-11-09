@@ -25,6 +25,8 @@ namespace ORNL
             //! \param build_parts: list of build parts to access steps
             static QList<QSharedPointer<GlobalLayer>> populateSteps(QSharedPointer<SettingsBase> global_sb, QVector<QSharedPointer<Part>> build_parts);
 
+            static void logGlobalLayers(const QList<QSharedPointer<GlobalLayer>>& global_layers);
+
     };
 }
 

@@ -24,11 +24,13 @@
 #include "widgets/layerbar.h"
 #include "widgets/part_widget/part_widget.h"
 #include "widgets/gcodebar.h"
-#include "widgets/cmd_widget.h"
+#include "widgets/cmd_widget.h" 
 #include "widgets/gcode_widget.h"
+
 #include "widgets/main_toolbar.h"
 #include "widgets/auto_orient_widget.h"
 #include "widgets/layer_template_widget.h"
+#include "widgets/PrinterControlWidget.h"
 
 // Local Windows
 #include "windows/preferences_window.h"
@@ -334,8 +336,11 @@ namespace ORNL {
             //! \brief Bars and Docks
             QMenuBar *m_menubar;
             QStatusBar *m_statusbar;
+            PrinterControlWidget *m_printercontrolbar;
+
             MainToolbar *m_main_toolbar;
             QDockWidget *m_cmddock;
+            QDockWidget *m_printercontroldock;
             QDockWidget *m_settingdock;
             QDockWidget *m_gcodedock;
             QDockWidget *m_layertimesdock;
